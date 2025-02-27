@@ -4,7 +4,7 @@
 - 把该项目git clone到本地。
 - 确认获得了本项目编辑权限，并可以SSH到github。
 	- 你可以在命令行执行`ssh -T git@github.com`，如果返回内容包含你的账户名则成功；否则可以根据这里的[教程](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account?platform=windows) 来将你操作设备的SSH公钥添加到你github账户中的信任列表。
-- 安装[Obsidian](https://obsidian.md/download)。
+- 安装[Obsidian](https://obsidian.md/download)，用Obsidian打开本项目的根目录。
 - 在偏好设置->第三方插件 中，寻找安装GitHub Sync插件。
 - 在偏好中GitHub Sync插件的设置中，设置Remote URL为本项目的SSH地址。
 	- `git@github.com:ArchyCillp/HPC-ML-HUB.git`
@@ -16,6 +16,7 @@
 	- 你没有配置插件的Remote URL地址
 	- 你的系统PATH环境里没有git（检测方法是打开你的命令行，输入git，看看是否已经安装了（~~某个神人竟然在windows系统上在wsl上装了git然后疑问为什么Obsidian找不到git~~））
 	- 你不知怎么的把本项目下的.git文件夹删了
+	- 你Obsidian打开的不是本项目的根目录（也就是本文件Readme在最外层的情况）
 	- 你`ssh -T git@github.com`不能成功，ssh key没配置对
 
 
