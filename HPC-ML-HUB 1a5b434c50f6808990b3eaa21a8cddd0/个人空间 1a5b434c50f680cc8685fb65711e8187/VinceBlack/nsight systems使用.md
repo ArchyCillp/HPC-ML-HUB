@@ -32,7 +32,7 @@ Sampling Environment: OK
 - 在时间线上追踪CUDA runtime 和 driver API的call
 - 在时间线上追踪GPU上发生的事情，比如内存复制，kernel执行
 ![[Pasted image 20250227172112.png]]
-![[Pasted image 20250227172549.png]]
+![[../../../accessories/Pasted image 20250227172549.png]]
 - memory transfer是红色的，kernel是蓝色的
 
 ![[Pasted image 20250227172838.png]]
