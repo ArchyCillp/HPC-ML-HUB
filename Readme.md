@@ -12,6 +12,12 @@
 - 至此，已经安装完成，点击主界面左边的github图标对本项目进行同步（包括把同步github到本地，然后把本地修改同步到github）。
 - 为了避免出现文件修改冲突，请尽可能修改自己创建的页面，如果修改了和别人合作的页面，请及时同步。
 ![](accessories/Pasted%20image%2020250227191223.png)
+- 如果你出现“Vault is not a GIt repo or git binary cannot be found”或其他错误，说明可能是以下几个原因之一：
+	- 你没有配置插件的Remote URL地址
+	- 你的系统PATH环境里没有git（检测方法是打开你的命令行，输入git，看看是否已经安装了（~~某个神人竟然在windows系统上在wsl上装了git然后疑问为什么Obsidian找不到git~~））
+	- 你不知怎么的把本项目下的.git文件夹删了
+	- 你`ssh -T git@github.com`不能成功，ssh key没配置对
+
 
 #### 注意事项
 ![](accessories/Pasted%20image%2020250227192004.png)
