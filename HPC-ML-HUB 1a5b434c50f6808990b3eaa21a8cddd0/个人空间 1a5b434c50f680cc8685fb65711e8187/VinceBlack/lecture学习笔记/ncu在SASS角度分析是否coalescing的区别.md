@@ -172,5 +172,16 @@ STG.E [R4.64], R3
 | （其他指令）CPI x EI                                     | 18.28      | 6.72       | 2.72     |
 | Achieved Occupancy (%)                             | **81.61**  | **74.19**  | **1.10** |
 | CPI x EI / AO                                      | **11.91**  | **7.97**   | **1.49** |
+
 这样就能很直观的看出，NCCopy因为没有coalescing导致的内存访问时延是CCopy的1.58倍，而且这也是它耗时的主要原因，近似于1.5倍的时间比。
 
+
+#### 访问两次
+
+![](../../../../accessories/Pasted%20image%2020250302151714.png)
+
+原写法（`out[index]=in[index]`）
+![](../../../../accessories/Pasted%20image%2020250302151641.png)
+
+访问两次（`out[index]=in[index];out[index]=in[index]+1;`）
+![](../../../../accessories/Pasted%20image%2020250302151651.png)
