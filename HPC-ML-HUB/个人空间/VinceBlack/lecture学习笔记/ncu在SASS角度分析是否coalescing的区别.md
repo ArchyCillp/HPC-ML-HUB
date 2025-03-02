@@ -185,3 +185,5 @@ STG.E [R4.64], R3
 
 访问两次（`out[index]=in[index];out[index]=in[index]+1;`）
 ![](../../../../accessories/Pasted%20image%2020250302151651.png)
+
+可以看到，第二次访问时`in[index]+1`都碰撞到cache里了。
