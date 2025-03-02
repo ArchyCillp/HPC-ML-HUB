@@ -1,5 +1,5 @@
 ## 安装注意事项
-
+target 不能是云上 docker 和 wsl, 这两种查到网上的说法是功能还在开发. 没有 root 权限的话基本上就 collect 不了 gpu metrics
 https://docs.nvidia.com/nsight-systems/InstallationGuide/index.html
 - target端执行以下代码
 ```shell
