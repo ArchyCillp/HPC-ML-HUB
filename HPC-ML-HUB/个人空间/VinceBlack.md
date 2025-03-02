@@ -11,3 +11,5 @@
 
 [CUDA VRAM](VinceBlack/CUDA%20VRAM.md)
 
+
+测试一下：使用deepseek的commit命名插件是否能用

@@ -1,6 +1,8 @@
 SASS指令解释参考 cloudcore 的知乎：https://zhuanlan.zhihu.com/p/163865260
 SASS取模的实现： https://forums.developer.nvidia.com/t/how-does-this-logic-for-the-modulo-operation-implementation-work/277485
 
+测试一下deepseek的git commit自动命名。
+
 ## 两段代码
 ```C++
 //NCcopy
@@ -185,3 +187,5 @@ STG.E [R4.64], R3
 
 访问两次（`out[index]=in[index];out[index]=in[index]+1;`）
 ![](../../../../accessories/Pasted%20image%2020250302151651.png)
+
+可以看到，第二次访问时`in[index]+1`都碰撞到cache里了。
