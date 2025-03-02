@@ -1,4 +1,0 @@
-# Nsight Compute
-fdafafewa
-
-fuck
