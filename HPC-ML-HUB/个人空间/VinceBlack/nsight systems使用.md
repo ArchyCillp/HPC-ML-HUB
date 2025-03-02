@@ -23,10 +23,10 @@ Sampling trigger event available: OK
 Intel(c) Last Branch Record support: Available
 Sampling Environment: OK
 ```
-
+`nsys status -e` 和 `sudo nsys status -e` 返回的结果不一样的. 
+![[Pasted image 20250302171055.png]]
+![[Pasted image 20250302171109.png]]
 ## GUI profiling 
-
-
 
 
 ## CUDA Trace
