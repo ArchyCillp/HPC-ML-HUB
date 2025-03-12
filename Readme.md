@@ -19,7 +19,11 @@
 	- 你Obsidian打开的不是本项目的根目录（也就是本文件Readme在最外层的情况）
 	- 你`ssh -T git@github.com`不能成功，ssh key没配置对
 
-
 #### 注意事项
 ![](accessories/Pasted%20image%2020250227192004.png)
 - 为了方便放置附图到accessories文件夹，并使用符合markdown标准格式的语法，请修改以上的Obsidian设置。
+
+#### GitHub Sync插件优化
+- 因为GitHub Sync插件对commit对命名很无趣，所以可以改成让deepseek帮忙给commit起名字
+- 详见[[Github Sync插件自动生成commit名](HPC-ML-HUB/Obsidian相关/Github%20Sync插件自动生成commit名.md)]
+- 效果图![](accessories/Pasted%20image%2020250302173910.png)
