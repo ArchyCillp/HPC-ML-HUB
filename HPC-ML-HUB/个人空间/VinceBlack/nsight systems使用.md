@@ -24,10 +24,15 @@ Intel(c) Last Branch Record support: Available
 Sampling Environment: OK
 ```
 `nsys status -e` 和 `sudo nsys status -e` 返回的结果不一样的. 
-![[Pasted image 20250302171055.png]]
-![[Pasted image 20250302171109.png]]
-## GUI profiling 
+![[../../../accessories/Pasted image 20250302181605.png]]
+![[../../../accessories/Pasted image 20250302181611.png]]
 
+## 使用注意事项
+Command line with arguments 那边如果 command 比较复杂的话可以写进一个 sh 文件里面去. 然后像下面这样进行 specify:
+![[../../../accessories/Pasted image 20250302201443.png]]
+![[../../../accessories/Pasted image 20250302201502.png]]
+
+## GUI profiling 
 
 ## CUDA Trace
 #### nsys提供的功能CUDA trace功能
