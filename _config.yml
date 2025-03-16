@@ -31,10 +31,8 @@ github_username:  jekyll
 
 # Build settings
 theme: jekyll-theme-cayman
-markdown: CommonMarkGhPages
 plugins:
   - jekyll-feed
-  - jekyll-commonmark
 include:
   - "**/*.md"
 
