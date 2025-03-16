@@ -1,10 +1,13 @@
 ---
 layout: default
-title: Readme
+title: 学学CUDA和ML吧孩子们
 ---
 ## 导航
 
 {% include toc.html %}
+
+本项目的github pages托管静态网站也可以访问了：
+https://archycillp.github.io/HPC-ML-HUB/Readme.html
 
 
 
