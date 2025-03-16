@@ -1,0 +1,22 @@
+{% assign pages_by_folder = site.pages | group_by: 'dir' %}
+
+<ul>
+  {% for folder in pages_by_folder %}
+    {% if folder.name != '' %}
+      <li>
+        <strong>{{ folder.name }}</strong>
+        <ul>
+          {% for item in folder.items %}
+            {% if item.path contains '.md' %}
+              <li>
+                <a href="{{ item.url | relative_url }}">
+                  {{ item.title | default: item.name | replace: '.md', '' }}
+                </a>
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </li>
+    {% endif %}
+  {% endfor %}
+</ul>

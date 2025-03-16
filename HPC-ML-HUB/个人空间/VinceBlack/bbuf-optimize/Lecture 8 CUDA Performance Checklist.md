@@ -1,3 +1,7 @@
+---
+title: Lecture 8 CUDA Performance Checklist
+---
+
 > 我的课程笔记，欢迎关注：https://github.com/BBuf/how-to-optim-algorithm-in-cuda/tree/master/cuda-mode 
 
 ## CUDA-MODE课程笔记 第8课: CUDA性能检查清单

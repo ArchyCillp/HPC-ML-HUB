@@ -1,3 +1,7 @@
+---
+title: memcpy性能优化
+---
+
 #### nvcomp之大量64KB chunk的memcpy
 - nvcomp的接口要求把需要压缩的数据划分成64KB的chunk，无论压缩前还是压缩后都需要以这个单位进行传输，因此就产生了大量的小memcpy
 - A10实测，传输一个1.46GB的float数组

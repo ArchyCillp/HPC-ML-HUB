@@ -1,3 +1,7 @@
+---
+title: HQ's project problem
+---
+
 ### Key-value atomic increment using hash table:
 ![](../../../accessories/Pasted%20image%2020250303115613.png)
 
