@@ -4,7 +4,7 @@
   {% for folder in pages_by_folder %}
     {% if folder.name != '' %}
       <li>
-        <strong>{{ folder.name | uri_decode }}</strong>
+        <strong class="folder-name">{{ folder.name }}</strong>
         <ul>
           {% for item in folder.items %}
             {% if item.path contains '.md' %}
@@ -20,3 +20,14 @@
     {% endif %}
   {% endfor %}
 </ul>
+
+<script>
+  // 获取所有包含 URL 编码的 <strong> 元素
+  const folderNameElements = document.querySelectorAll('.folder-name');
+  // 遍历每个元素并解码
+  folderNameElements.forEach((element) => {
+    const encodedText = element.textContent;
+    const decodedText = decodeURIComponent(encodedText);
+    element.textContent = decodedText;
+  });
+</script>
