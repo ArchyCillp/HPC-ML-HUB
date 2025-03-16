@@ -4,7 +4,7 @@
   {% for folder in pages_by_folder %}
     {% if folder.name != '' %}
       <li>
-        <strong>{{ folder.name }}</strong>
+        <strong>{{ folder.name | uri_decode }}</strong>
         <ul>
           {% for item in folder.items %}
             {% if item.path contains '.md' %}
