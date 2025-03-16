@@ -229,4 +229,3 @@ std::vector<MemoryRequest> deviceRequests_;
 几个需要注意的点：
 - CUDA内存是256 byte aligned的，也就是任何malloc都是返回256 byte的乘数地址，不符合这个规定很可能出错。
 - `cudaMallocHost`非常关键，它能让host上的内存分配的是pinned memory，这种memory不会进swap区，也就是肯定不在硬盘里。因此DMA可以直接启动host<->device的传输。通常的内存是pagable的，也就是进行pcie复制前，需要一个一个page地load到page-locked staging buffer，这就慢了。在GPU01机器上检测到，一个一个多GB的大数组的传输，使用pinned memory可以到24GB/s，而使用pagable memory只有10GB/s。
-- 
