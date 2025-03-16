@@ -42,6 +42,10 @@ auto vector = raft::make_device_vector<float>(handle, n_cols);
 auto matrix = raft::make_device_matrix<float>(handle, n_rows, n_cols);
 ```
 The `mdspan` is a lightweight non-owning view that can wrap around any pointer, maintaining shape, layout, and indexing information for accessing elements.
+关于`mdspan`, 直接参考 C++ 就行: 
+- https://en.cppreference.com/w/cpp/container/mdspan
+- std::mdspan for C++23入门 - 南山烟雨珠江潮的文章 - 知乎 https://zhuanlan.zhihu.com/p/653155513
+
 ```cpp
 // Scalar mdspan on device
 auto scalar_view = scalar.view();
@@ -52,6 +56,18 @@ auto vector_view = vector.view();
 // Matrix mdspan on device
 auto matrix_view = matrix.view();
 ```
+
+多维数组`T arr[M][N][O]`的内存是连续的，布局上其实是一个一维数组。mdspan正是基于此原理定义，传入一维数组的首地址，然后再传入每一维的大小，既可以当成一个多维数组使用：
+```cpp
+```cpp
+vector<int> v (M * N * O); // 一维数组
+mdspan sp (v.data(), M, N, O); // 当做三维数组使用
+// 像这样访问每个元素：
+// sp[2, 3, 4] = 5;
+```
+
+
+```cpp
 Of course, RAFT’s `mdspan`/`mdarray` APIs aren’t just limited to the `device`. You can also create `host` variants:
 ```cpp
 #include <raft/core/host_mdarray.hpp>
@@ -69,10 +85,106 @@ auto vector_view = raft::make_host_vector_view(vector.data_handle(), vector.exte
 auto matrix_view = raft::make_host_matrix_view(matrix.data_handle(), matrix.extent(0), matrix.extent(1));
 ```
 ### view()
-
+You would typically use view() when you want a non-owning reference to the mdarray’s memory—perhaps to pass this reference into algorithms or kernels that only need to read/write the existing data without taking ownership of it. This pattern keeps the data management (allocation/deallocation) inside your mdarray object, while letting external functions operate on the data via the mdspan view.
 ### extent()
 By convention for a row-major layout, “extent(0)” returns the number of rows, and “extent(1)” returns the number of columns.
+![[../../../../accessories/Pasted image 20250316234248.png]]
 ### data_handle()
+只要搞清楚什么是 owning, 什么是 non-owning 就分得清 data(), data_handle() 和 view() 的区别了.
+https://github-pages.ucl.ac.uk/research-computing-with-cpp/02cpp1/sec05Pointers.html#:~:text=Raw%20pointers%20can%20be%20used,t%20point%20to%20invalid%20memory.
+
+https://chatgpt.com/share/67d70006-fb44-8011-9638-ee49a87641b2
+
+
+The following are the error log:
+(cuvs) simon@simonxcomp:~/test-kmeans/cuvs$ ./build.sh libcuvs
+Building for the architecture of the GPU in the system...
+-- The CXX compiler identification is GNU 13.3.0
+-- The CUDA compiler identification is NVIDIA 12.6.85 with host compiler GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /home/simon/miniconda3/envs/cuvs/bin/x86_64-conda-linux-gnu-c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Detecting CUDA compiler ABI info
+-- Detecting CUDA compiler ABI info - done
+-- Check for working CUDA compiler: /home/simon/miniconda3/envs/cuvs/bin/nvcc - skipped
+-- Detecting CUDA compile features
+-- Detecting CUDA compile features - done
+-- Using auto detection of gpu-archs: 86
+-- Project CUVS is building for CUDA architectures:
+  86-real
+-- Found CUDAToolkit: /home/simon/miniconda3/envs/cuvs/targets/x86_64-linux/include (found version "12.6.85")
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Check if compiler accepts -pthread
+-- Check if compiler accepts -pthread - yes
+-- Found Threads: TRUE
+-- Found OpenMP_CXX: -fopenmp (found version "4.5")
+-- Found OpenMP_CUDA: -fopenmp (found version "4.5")
+-- Found OpenMP: TRUE (found version "4.5")
+-- Found Git: /usr/bin/git (found version "2.34.1")
+-- CPM: Adding package CCCL@2.7.0 (v2.7.0)
+CMake Warning (dev) at /home/simon/miniconda3/envs/cuvs/share/cmake-3.31/Modules/FetchContent.cmake:1953 (message):
+  Calling FetchContent_Populate(CCCL) is deprecated, call
+  FetchContent_MakeAvailable(CCCL) instead.  Policy CMP0169 can be set to OLD
+  to allow FetchContent_Populate(CCCL) to be called directly for now, but the
+  ability to call it with declared details will be removed completely in a
+  future version.
+Call Stack (most recent call first):
+  build/cmake/CPM_0.40.0.cmake:1074 (FetchContent_Populate)
+  build/cmake/CPM_0.40.0.cmake:868 (cpm_fetch_package)
+  build/_deps/rapids-cmake-src/rapids-cmake/cpm/find.cmake:187 (CPMAddPackage)
+  build/_deps/rapids-cmake-src/rapids-cmake/cpm/cccl.cmake:81 (rapids_cpm_find)
+  CMakeLists.txt:178 (rapids_cpm_cccl)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+[1/9] Creating directories for 'cccl-populate'
+[1/9] Performing download step (git clone) for 'cccl-populate'
+Cloning into 'cccl-src'...
+error: RPC failed; curl 92 HTTP/2 stream 0 was not closed cleanly: CANCEL (err 8)
+error: 2219 bytes of body are still expected
+fetch-pack: unexpected disconnect while reading sideband packet
+fatal: early EOF
+fatal: fetch-pack: invalid index-pack output
+Cloning into 'cccl-src'...
+error: RPC failed; curl 92 HTTP/2 stream 0 was not closed cleanly: CANCEL (err 8)
+error: 2068 bytes of body are still expected
+fetch-pack: unexpected disconnect while reading sideband packet
+fatal: early EOF
+fatal: fetch-pack: invalid index-pack output
+Cloning into 'cccl-src'...
+error: RPC failed; curl 92 HTTP/2 stream 0 was not closed cleanly: CANCEL (err 8)
+error: 2169 bytes of body are still expected
+fetch-pack: unexpected disconnect while reading sideband packet
+fatal: early EOF
+fatal: fetch-pack: invalid index-pack output
+Had to git clone more than once: 3 times.
+CMake Error at cccl-subbuild/cccl-populate-prefix/tmp/cccl-populate-gitclone.cmake:50 (message):
+  Failed to clone repository: 'https://github.com/NVIDIA/cccl.git'
+
+
+FAILED: cccl-populate-prefix/src/cccl-populate-stamp/cccl-populate-download /home/simon/test-kmeans/cuvs/cpp/build/_deps/cccl-subbuild/cccl-populate-prefix/src/cccl-populate-stamp/cccl-populate-download 
+cd /home/simon/test-kmeans/cuvs/cpp/build/_deps && /home/simon/miniconda3/envs/cuvs/bin/cmake -DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE -P /home/simon/test-kmeans/cuvs/cpp/build/_deps/cccl-subbuild/cccl-populate-prefix/tmp/cccl-populate-gitclone.cmake && /home/simon/miniconda3/envs/cuvs/bin/cmake -E touch /home/simon/test-kmeans/cuvs/cpp/build/_deps/cccl-subbuild/cccl-populate-prefix/src/cccl-populate-stamp/cccl-populate-download
+ninja: build stopped: subcommand failed.
+
+CMake Error at /home/simon/miniconda3/envs/cuvs/share/cmake-3.31/Modules/FetchContent.cmake:1918 (message):
+  Build step for cccl failed: 1
+Call Stack (most recent call first):
+  /home/simon/miniconda3/envs/cuvs/share/cmake-3.31/Modules/FetchContent.cmake:1609 (__FetchContent_populateSubbuild)
+  /home/simon/miniconda3/envs/cuvs/share/cmake-3.31/Modules/FetchContent.cmake:2145:EVAL:2 (__FetchContent_doPopulation)
+  /home/simon/miniconda3/envs/cuvs/share/cmake-3.31/Modules/FetchContent.cmake:2145 (cmake_language)
+  /home/simon/miniconda3/envs/cuvs/share/cmake-3.31/Modules/FetchContent.cmake:1978:EVAL:1 (__FetchContent_Populate)
+  /home/simon/miniconda3/envs/cuvs/share/cmake-3.31/Modules/FetchContent.cmake:1978 (cmake_language)
+  build/cmake/CPM_0.40.0.cmake:1074 (FetchContent_Populate)
+  build/cmake/CPM_0.40.0.cmake:868 (cpm_fetch_package)
+  build/_deps/rapids-cmake-src/rapids-cmake/cpm/find.cmake:187 (CPMAddPackage)
+  build/_deps/rapids-cmake-src/rapids-cmake/cpm/cccl.cmake:81 (rapids_cpm_find)
+  CMakeLists.txt:178 (rapids_cpm_cccl)
+
+
+-- Configuring incomplete, errors occurred!
+
 
 ## Kmeans
 first look at https://github.com/rapidsai/cuvs/tree/branch-25.04/cpp/src/cluster
