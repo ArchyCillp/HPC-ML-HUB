@@ -1,6 +1,12 @@
 ---
+layout: default
 title: Readme
 ---
+## 导航
+
+{% include toc.html %}
+
+
 
 ## 使用Obsidian在本地编辑和同步本项目
 
