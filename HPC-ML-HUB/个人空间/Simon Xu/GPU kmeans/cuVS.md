@@ -94,8 +94,12 @@ You would typically use view() when you want a non-owning reference to the mdarr
 By convention for a row-major layout, “extent(0)” returns the number of rows, and “extent(1)” returns the number of columns.
 ![[../../../../accessories/Pasted image 20250316234248.png]]
 ### data_handle()
+data_handle() in `mdspan`:  https://en.cppreference.com/w/cpp/container/mdspan
+![[../../../../accessories/Pasted image 20250317192258.png]]
+
+
 只要搞清楚什么是 owning, 什么是 non-owning 就分得清 data(), data_handle() 和 view() 的区别了.
-https://github-pages.ucl.ac.uk/research-computing-with-cpp/02cpp1/sec05Pointers.html#:~:text=Raw%20pointers%20can%20be%20used,t%20point%20to%20invalid%20memory.
+
 
 https://chatgpt.com/share/67d70006-fb44-8011-9638-ee49a87641b2
 
@@ -203,6 +207,16 @@ The input data type.
 The centroid type.
 ### balanced_params
 ![[../../../../accessories/Pasted image 20250316172608.png]]
+### MappingOpT
+![[../../../../accessories/Pasted image 20250317155401.png]]
+two things need to know:
+- `MappingOpT = raft::identity_op`
+- `cuvs::spatial::knn::detail::utils::mapping<float>{}` 按理来说这个 mapping 应该是 `raft::identity_op` 的类型
+![[../../../../accessories/Pasted image 20250317162425.png]]
+
+需要去提供 raft 和 cuvs 的 link 给 gpt.
+I am currently reading the codebase (mixed with cpp and cuda) of cuvs (cuVS is a new library mostly derived from the approximate nearest neighbors and clustering algorithms in the RAPIDS RAFT library of machine learning and data mining primitives.) (https://github.com/rapidsai/cuvs) in github. I am confused about what exactly mapping_op does and what it is used for and how it is used by users.
+Could you read the following code and the code in the file that I provide to you to answer my question?
 
 ## Balanced KMeans API
 ### fit
@@ -218,6 +232,7 @@ three-stages hierarchical k-means algorithm:
 Use when you already have trained centroids and want to determine which cluster each data point belongs to. 
 ![[../../../../accessories/Pasted image 20250315203457.png]]
 ### fit_predict
+Examples of calling `fit_predict`:
 ```cpp
 #include <cuvs/cluster/kmeans_balanced.cuh>
 #include <cuvs/cluster/kmeans_balanced_types.hpp>
@@ -231,6 +246,7 @@ auto labels    = raft::make_device_vector<uint32_t, int>(handle, n_samples);
 // X is a raft::device_matrix_view<const float, int> for the input data
 cuvs::cluster::kmeans_balanced::fit_predict(handle, params, X, centroids.view(), labels.view());
 ```
+
 
 both train the model and get the cluster assignments in one step.
 ![[../../../../accessories/Pasted image 20250316121545.png]]
