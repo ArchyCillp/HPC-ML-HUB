@@ -1,4 +1,9 @@
+---
+title: 默写gemm
+---
+
 - naive gemm
+
 ```C++
 struct Matrix {
 	int width;
@@ -51,6 +56,7 @@ void MatMul(const Matrix A, const Matrix B, const Matrix C)
 
 
 - simple shared memory
+
 ```C++
 #define BLOCK_1D_SIZE 16
 

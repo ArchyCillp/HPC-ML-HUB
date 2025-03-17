@@ -1,3 +1,7 @@
+---
+title: nsight systems使用
+---
+
 ## 机器和 setting 要求
 必须拥有对 gpu 的 root 权限才能 collect gpu metrics, 因此云gpu基本上不可能使用 nsys. 基本上必须要用自己的机器才行. 
 host 是 win, 然后 target 是同一台机子的 wsl 好像也不行, 网上查到的说法是说功能还在开发. 

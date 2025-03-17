@@ -1,3 +1,7 @@
+---
+title: Obsidian使用
+---
+
 ## 快捷键
 - command+o 搜索笔记名
 - command+p 命令大全

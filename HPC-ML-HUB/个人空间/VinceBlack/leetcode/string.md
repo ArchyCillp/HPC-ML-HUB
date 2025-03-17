@@ -1,3 +1,7 @@
+---
+title: string
+---
+
 基本用法
 ```C++
 #include <iostream>

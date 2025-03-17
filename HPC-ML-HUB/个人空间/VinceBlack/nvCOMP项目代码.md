@@ -1,3 +1,7 @@
+---
+title: nvCOMP项目代码
+---
+
 ## high-level API 概念
 ```C++
 LZ4Manager nvcomp_manager{chunk_size, format_opts, stream};

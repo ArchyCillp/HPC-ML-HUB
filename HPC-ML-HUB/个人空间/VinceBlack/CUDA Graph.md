@@ -1,3 +1,7 @@
+---
+title: CUDA Graph
+---
+
 ## 解决的问题
 
 - 对于包含 us级别的小kernel但是kernel数量特别多 的任务，CPU端launch kernel的时间可能成了bottleneck

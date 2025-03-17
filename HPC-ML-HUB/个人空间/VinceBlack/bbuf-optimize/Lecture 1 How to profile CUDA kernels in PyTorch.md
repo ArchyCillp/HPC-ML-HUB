@@ -1,3 +1,7 @@
+---
+title: Lecture 1 How to profile CUDA kernels in PyTorch
+---
+
 > 我的课程笔记，欢迎关注：https://github.com/BBuf/how-to-optim-algorithm-in-cuda/tree/master/cuda-mode 
 
 ## 第一课: 如何在 PyTorch 中 profile CUDA kernels

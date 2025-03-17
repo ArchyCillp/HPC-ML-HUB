@@ -1,3 +1,7 @@
+---
+title: pair & tuple
+---
+
 ## 如何把tuple作为unordered_set的key？
 ```C++
 struct TupleHash {
