@@ -1,0 +1,16 @@
+### 整体优化思路
+- warp divergence：warp内部的thread是否在干不同的指令，或者只有部分thread在工作？
+- bank conflict: 查看同warp内部的thread是否存在访问同bank的情况
+- warp使用率低：reduce到后面越来越少的warp在工作，可以加强每个warp对global的请求数量，增大global bandwidth的利用率，load到shared之前，可以先合并
+- warp内部合并：warp primitive（warp_）可以用来在register级别进行合并
+	- CC8.0以上，如果是unsigned或者int，reduce是add,min,max,and,or,xor，可以直接用对应的`__reduce_<reducemethod>_sync(mask, value)`
+	- 一般情况下，可以用`__shfl_down_sync(0xfffffffff,sum,2**k)`一步步在寄存器级别进行reduce
+	- 一个比较优秀的方案（后续优化已经A100上效果不显著量）：
+		- 每个thread先直接从global请求进行合并自己负责的数据，现在数据量等于thread总数
+		- 每个warp通过warp primitive合并，现在数据量等于warp总数
+		- block内的warp把数据写入shared memory，用一个warp进行最后的warp primitive合并
+- pack（vectorization优化）
+	- float4
+- occupancy优化
+- GridSize优化
+	- 尽可能控制每个SM的wave数量
