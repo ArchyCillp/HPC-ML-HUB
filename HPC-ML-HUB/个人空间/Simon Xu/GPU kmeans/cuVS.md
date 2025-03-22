@@ -1,8 +1,3 @@
----
-title: cuVS
----
-
-
 ## API Basics
 Memory management: 
 - cuVS uses the [RMM]([rapidsai/rmm](https://github.com/rapidsai/rmm)) library. 
@@ -89,10 +84,15 @@ auto vector_view = raft::make_host_vector_view(vector.data_handle(), vector.exte
 auto matrix_view = raft::make_host_matrix_view(matrix.data_handle(), matrix.extent(0), matrix.extent(1));
 ```
 ### view()
-You would typically use view() when you want a non-owning reference to the mdarray’s memory—perhaps to pass this reference into algorithms or kernels that only need to read/write the existing data without taking ownership of it. This pattern keeps the data management (allocation/deallocation) inside your mdarray object, while letting external functions operate on the data via the mdspan view.
+![[../../../../accessories/Pasted image 20250317193050.png]]
+![[../../../../accessories/Pasted image 20250317193040.png]]
 ### extent()
+![[../../../../accessories/Pasted image 20250317192857.png]]
 By convention for a row-major layout, “extent(0)” returns the number of rows, and “extent(1)” returns the number of columns.
 ![[../../../../accessories/Pasted image 20250316234248.png]]
+### data()
+![[../../../../accessories/Pasted image 20250317192829.png]]
+
 ### data_handle()
 data_handle() in `mdspan`:  https://en.cppreference.com/w/cpp/container/mdspan
 ![[../../../../accessories/Pasted image 20250317192258.png]]
@@ -193,6 +193,7 @@ Call Stack (most recent call first):
 
 -- Configuring incomplete, errors occurred!
 
+![[../../../../accessories/Pasted image 20250319193503.png]]
 
 ## Kmeans
 first look at https://github.com/rapidsai/cuvs/tree/branch-25.04/cpp/src/cluster
@@ -217,6 +218,8 @@ two things need to know:
 需要去提供 raft 和 cuvs 的 link 给 gpt.
 I am currently reading the codebase (mixed with cpp and cuda) of cuvs (cuVS is a new library mostly derived from the approximate nearest neighbors and clustering algorithms in the RAPIDS RAFT library of machine learning and data mining primitives.) (https://github.com/rapidsai/cuvs) in github. I am confused about what exactly mapping_op does and what it is used for and how it is used by users.
 Could you read the following code and the code in the file that I provide to you to answer my question?
+
+
 
 ## Balanced KMeans API
 ### fit
@@ -384,3 +387,5 @@ I want to know:
 
 算法实现, especially how to make it parallel. 
 每一步的 rationale. 
+
+买拓展坞, 拓展坞有USBC接口, 下载一个软件 (Mos) 把反向效果抵消.
