@@ -1,0 +1,2 @@
+https://developer.download.nvidia.com/video/gputechconf/gtc/2020/presentations/s22141-what-the-profiler-is-telling-you-how-to-get-the-most-performance-out-of-your-hardware.pdf
+![](../../../accessories/Pasted%20image%2020250320193335.png)
