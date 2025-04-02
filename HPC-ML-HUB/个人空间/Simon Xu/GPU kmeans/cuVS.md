@@ -1,3 +1,19 @@
+## TODO
+1. 确认是不是这个事情, imbalanced add. 
+2. profile segment kmeans 的资源利用率.
+3. 看 raft api 考虑如何支持 multisteam ⇒ 是为了同时 build 多个 indexes. index 之间和 index内部两层 parallel.
+4. eval segment kmeans build 是用 multistream 来做 parallel 还是重写 kernel ?
+
+baotong说既然跑了这么多轮, 能不能统计一下, 每个函数的累积时间. 统计结果如下:
+![[Pasted image 20250402163905.png]]
+ruidong说开多个 stream 去做没用, 原因是 atomicAdd 指令一旦发射出去就会占住 SM, 导致可能开不同的 stream build 不同的 index 也不会提高 SM 的利用率. 
+但 ruidong 不清楚 segment_kmeans 慢的主要原因是不是这个. 
+对于一个 index 的 kernel 重写?
+## How to build
+编译好头文件之后直接在 examples 里面跑 build.sh 就行了.
+To build cuvs lib for cpp, we need to go to cuvs/cpp, and then run the following script:
+![[Pasted image 20250402154136.png]]
+实际上运行的时候就是执行这个 installation location 里面的 code (in our case it should be ~/miniconda3/env/cuvs/include) 而不是 cuvs/cpp/include. 
 ## API Basics
 Memory management: 
 - cuVS uses the [RMM]([rapidsai/rmm](https://github.com/rapidsai/rmm)) library. 
@@ -26,36 +42,23 @@ https://docs.rapids.ai/api/raft/nightly/cpp_api/core_resources/
 ### Device Resources
 `raft::device_resources` is a **convenience over** using `raft::resources` directly. It provides accessor methods to retrieve resources such as the CUDA stream, stream pool, and handles to the various CUDA math libraries like cuBLAS and cuSOLVER.
 ## Multi-dimensional span (C++)
+
 https://docs.rapids.ai/api/cuvs/nightly/api_interoperability/#multi-dimensional-span-c
 https://docs.rapids.ai/api/raft/stable/cpp_api/mdspan/
-`mdarray` structure: simplifies the allocation and management of multi-dimensional data in both host and device (GPU) memory.
-The `mdarray` is an owning object that forms a convenience layer over RMM and can be constructed in RAFT using a number of different helper functions:
-```cpp
-#include <raft/core/device_mdarray.hpp>
+### mdarray
+`auto host_data = raft::make_host_matrix<float, int64_t>(n_rows, n_cols);`
+Two ways to access:
+1. `host_data.data_handle()[row * n_cols + col]`
+2. `host_data(row, col)`
+`auto matrix = raft::make_device_matrix<float>(handle, n_rows, n_cols);`
 
-int n_rows = 10;
-int n_cols = 10;
-
-auto scalar = raft::make_device_scalar<float>(handle, 1.0);
-auto vector = raft::make_device_vector<float>(handle, n_cols);
-auto matrix = raft::make_device_matrix<float>(handle, n_rows, n_cols);
-```
-The `mdspan` is a lightweight non-owning view that can wrap around any pointer, maintaining shape, layout, and indexing information for accessing elements.
+mdarray.view() 就是 mdspan 了. 
+![[../../../../accessories/Pasted image 20250317193050.png]]
+![[../../../../accessories/Pasted image 20250317193040.png]]
+### mdspan
 关于`mdspan`, 直接参考 C++ 就行: 
 - https://en.cppreference.com/w/cpp/container/mdspan
 - std::mdspan for C++23入门 - 南山烟雨珠江潮的文章 - 知乎 https://zhuanlan.zhihu.com/p/653155513
-
-```cpp
-// Scalar mdspan on device
-auto scalar_view = scalar.view();
-
-// Vector mdspan on device
-auto vector_view = vector.view();
-
-// Matrix mdspan on device
-auto matrix_view = matrix.view();
-```
-
 多维数组`T arr[M][N][O]`的内存是连续的，布局上其实是一个一维数组。mdspan正是基于此原理定义，传入一维数组的首地址，然后再传入每一维的大小，既可以当成一个多维数组使用：
 ```cpp
 ```cpp
@@ -64,28 +67,7 @@ mdspan sp (v.data(), M, N, O); // 当做三维数组使用
 // 像这样访问每个元素：
 // sp[2, 3, 4] = 5;
 ```
-
-
-```cpp
-Of course, RAFT’s `mdspan`/`mdarray` APIs aren’t just limited to the `device`. You can also create `host` variants:
-```cpp
-#include <raft/core/host_mdarray.hpp>
-#include <raft/core/host_mdspan.hpp>
-
-int n_rows = 10;
-int n_cols = 10;
-
-auto scalar = raft::make_host_scalar<float>(handle, 1.0);
-auto vector = raft::make_host_vector<float>(handle, n_cols);
-auto matrix = raft::make_host_matrix<float>(handle, n_rows, n_cols);
-
-auto scalar_view = raft::make_host_scalar_view(scalar.data_handle());
-auto vector_view = raft::make_host_vector_view(vector.data_handle(), vector.extent(0));
-auto matrix_view = raft::make_host_matrix_view(matrix.data_handle(), matrix.extent(0), matrix.extent(1));
-```
-### view()
-![[../../../../accessories/Pasted image 20250317193050.png]]
-![[../../../../accessories/Pasted image 20250317193040.png]]
+data_handle() in `mdspan`:  https://en.cppreference.com/w/cpp/container/mdspan
 ### extent()
 ![[../../../../accessories/Pasted image 20250317192857.png]]
 By convention for a row-major layout, “extent(0)” returns the number of rows, and “extent(1)” returns the number of columns.
@@ -94,102 +76,8 @@ By convention for a row-major layout, “extent(0)” returns the number of rows
 ![[../../../../accessories/Pasted image 20250317192829.png]]
 
 ### data_handle()
-data_handle() in `mdspan`:  https://en.cppreference.com/w/cpp/container/mdspan
-![[../../../../accessories/Pasted image 20250317192258.png]]
-
-
-只要搞清楚什么是 owning, 什么是 non-owning 就分得清 data(), data_handle() 和 view() 的区别了.
-
 
 https://chatgpt.com/share/67d70006-fb44-8011-9638-ee49a87641b2
-
-
-The following are the error log:
-(cuvs) simon@simonxcomp:~/test-kmeans/cuvs$ ./build.sh libcuvs
-Building for the architecture of the GPU in the system...
--- The CXX compiler identification is GNU 13.3.0
--- The CUDA compiler identification is NVIDIA 12.6.85 with host compiler GNU 13.3.0
--- Detecting CXX compiler ABI info
--- Detecting CXX compiler ABI info - done
--- Check for working CXX compiler: /home/simon/miniconda3/envs/cuvs/bin/x86_64-conda-linux-gnu-c++ - skipped
--- Detecting CXX compile features
--- Detecting CXX compile features - done
--- Detecting CUDA compiler ABI info
--- Detecting CUDA compiler ABI info - done
--- Check for working CUDA compiler: /home/simon/miniconda3/envs/cuvs/bin/nvcc - skipped
--- Detecting CUDA compile features
--- Detecting CUDA compile features - done
--- Using auto detection of gpu-archs: 86
--- Project CUVS is building for CUDA architectures:
-  86-real
--- Found CUDAToolkit: /home/simon/miniconda3/envs/cuvs/targets/x86_64-linux/include (found version "12.6.85")
--- Performing Test CMAKE_HAVE_LIBC_PTHREAD
--- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
--- Check if compiler accepts -pthread
--- Check if compiler accepts -pthread - yes
--- Found Threads: TRUE
--- Found OpenMP_CXX: -fopenmp (found version "4.5")
--- Found OpenMP_CUDA: -fopenmp (found version "4.5")
--- Found OpenMP: TRUE (found version "4.5")
--- Found Git: /usr/bin/git (found version "2.34.1")
--- CPM: Adding package CCCL@2.7.0 (v2.7.0)
-CMake Warning (dev) at /home/simon/miniconda3/envs/cuvs/share/cmake-3.31/Modules/FetchContent.cmake:1953 (message):
-  Calling FetchContent_Populate(CCCL) is deprecated, call
-  FetchContent_MakeAvailable(CCCL) instead.  Policy CMP0169 can be set to OLD
-  to allow FetchContent_Populate(CCCL) to be called directly for now, but the
-  ability to call it with declared details will be removed completely in a
-  future version.
-Call Stack (most recent call first):
-  build/cmake/CPM_0.40.0.cmake:1074 (FetchContent_Populate)
-  build/cmake/CPM_0.40.0.cmake:868 (cpm_fetch_package)
-  build/_deps/rapids-cmake-src/rapids-cmake/cpm/find.cmake:187 (CPMAddPackage)
-  build/_deps/rapids-cmake-src/rapids-cmake/cpm/cccl.cmake:81 (rapids_cpm_find)
-  CMakeLists.txt:178 (rapids_cpm_cccl)
-This warning is for project developers.  Use -Wno-dev to suppress it.
-
-[1/9] Creating directories for 'cccl-populate'
-[1/9] Performing download step (git clone) for 'cccl-populate'
-Cloning into 'cccl-src'...
-error: RPC failed; curl 92 HTTP/2 stream 0 was not closed cleanly: CANCEL (err 8)
-error: 2219 bytes of body are still expected
-fetch-pack: unexpected disconnect while reading sideband packet
-fatal: early EOF
-fatal: fetch-pack: invalid index-pack output
-Cloning into 'cccl-src'...
-error: RPC failed; curl 92 HTTP/2 stream 0 was not closed cleanly: CANCEL (err 8)
-error: 2068 bytes of body are still expected
-fetch-pack: unexpected disconnect while reading sideband packet
-fatal: early EOF
-fatal: fetch-pack: invalid index-pack output
-Cloning into 'cccl-src'...
-error: RPC failed; curl 92 HTTP/2 stream 0 was not closed cleanly: CANCEL (err 8)
-error: 2169 bytes of body are still expected
-fetch-pack: unexpected disconnect while reading sideband packet
-fatal: early EOF
-fatal: fetch-pack: invalid index-pack output
-Had to git clone more than once: 3 times.
-CMake Error at cccl-subbuild/cccl-populate-prefix/tmp/cccl-populate-gitclone.cmake:50 (message):
-  Failed to clone repository: 'https://github.com/NVIDIA/cccl.git'
-
-
-FAILED: cccl-populate-prefix/src/cccl-populate-stamp/cccl-populate-download /home/simon/test-kmeans/cuvs/cpp/build/_deps/cccl-subbuild/cccl-populate-prefix/src/cccl-populate-stamp/cccl-populate-download 
-cd /home/simon/test-kmeans/cuvs/cpp/build/_deps && /home/simon/miniconda3/envs/cuvs/bin/cmake -DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE -P /home/simon/test-kmeans/cuvs/cpp/build/_deps/cccl-subbuild/cccl-populate-prefix/tmp/cccl-populate-gitclone.cmake && /home/simon/miniconda3/envs/cuvs/bin/cmake -E touch /home/simon/test-kmeans/cuvs/cpp/build/_deps/cccl-subbuild/cccl-populate-prefix/src/cccl-populate-stamp/cccl-populate-download
-ninja: build stopped: subcommand failed.
-
-CMake Error at /home/simon/miniconda3/envs/cuvs/share/cmake-3.31/Modules/FetchContent.cmake:1918 (message):
-  Build step for cccl failed: 1
-Call Stack (most recent call first):
-  /home/simon/miniconda3/envs/cuvs/share/cmake-3.31/Modules/FetchContent.cmake:1609 (__FetchContent_populateSubbuild)
-  /home/simon/miniconda3/envs/cuvs/share/cmake-3.31/Modules/FetchContent.cmake:2145:EVAL:2 (__FetchContent_doPopulation)
-  /home/simon/miniconda3/envs/cuvs/share/cmake-3.31/Modules/FetchContent.cmake:2145 (cmake_language)
-  /home/simon/miniconda3/envs/cuvs/share/cmake-3.31/Modules/FetchContent.cmake:1978:EVAL:1 (__FetchContent_Populate)
-  /home/simon/miniconda3/envs/cuvs/share/cmake-3.31/Modules/FetchContent.cmake:1978 (cmake_language)
-  build/cmake/CPM_0.40.0.cmake:1074 (FetchContent_Populate)
-  build/cmake/CPM_0.40.0.cmake:868 (cpm_fetch_package)
-  build/_deps/rapids-cmake-src/rapids-cmake/cpm/find.cmake:187 (CPMAddPackage)
-  build/_deps/rapids-cmake-src/rapids-cmake/cpm/cccl.cmake:81 (rapids_cpm_find)
-  CMakeLists.txt:178 (rapids_cpm_cccl)
-
 
 -- Configuring incomplete, errors occurred!
 
