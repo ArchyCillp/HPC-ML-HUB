@@ -38,5 +38,5 @@ https://archycillp.github.io/HPC-ML-HUB/Readme.html
 
 #### GitHub Sync插件优化
 - 因为GitHub Sync插件对commit对命名很无趣，所以可以改成让deepseek帮忙给commit起名字
-- 详见[[Github Sync插件自动生成commit名](HPC-ML-HUB/Obsidian相关/Github%20Sync插件自动生成commit名.md)]
+- 详见[[Github Sync插件自动生成commit名](HPC-ML-HUB/Obsidian相关/Github%20Sync插件自动生成commit名.html)]
 - 效果图![](accessories/Pasted%20image%2020250302173910.png)
