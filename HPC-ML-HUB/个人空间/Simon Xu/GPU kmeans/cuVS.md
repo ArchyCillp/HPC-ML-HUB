@@ -13,8 +13,28 @@ ruidong说开多个 stream 去做没用, 原因是 atomicAdd 指令一旦发射�
 编译好头文件之后直接在 examples 里面跑 build.sh 就行了.
 To build cuvs lib for cpp, we need to go to cuvs/cpp, and then run the following script:
 ![[Pasted image 20250402154136.png]]
-实际上运行的时候就是执行这个 installation location 里面的 code (in our case it should be ~/miniconda3/env/cuvs/include) 而不是 cuvs/cpp/include. 
+实际上运行的时候就是执行这个 installation location 里面的 code (in our case it should be ~/miniconda3/env/cuvs/include) 而不是 cuvs/cpp/include. 我们在 run ./build.sh 的最后其实也可以看到这一点:
+![[Pasted image 20250403103851.png]]
 ## API Basics
+All public APIs should be lightweight wrappers around calls to private APIs inside the `detail` namespace. e.g., `ivf_flat.hpp` is the lightweight wrapper, and `ivf_flat_build.cuh` is the private APIs, and `ivf_flat_build_extend_half_int64_t.cu` is the template instantiation file. 
+
+`ivf_flat_index.cpp` 只包含 `#include <cuvs/neighbors/ivf_flat.hpp>`, it is used to separate the class template's function definitions out into a `.cpp` file to keep the interface `.hpp` cleaner. It adds **explicit instantiations** at the bottom of the `.cpp` file like `ivf_flat_build_extend_half_int64_t.cu`.
+```cpp
+template struct index<float, int64_t>;
+template struct index<half, int64_t>;
+template struct index<int8_t, int64_t>;
+template struct index<uint8_t, int64_t>;
+```
+These explicit instantiations tell the compiler: “for these specific type combinations (`float, int64_t`, `half, int64_t`, etc.), produce the compiled code in this translation unit.”
+
+This pattern of
+
+- **(1)** “declaring a template class in the header” and
+    
+- **(2)** “defining it + explicitly instantiating it in the `.cpp`”  
+    is a common approach for libraries that want to limit compile times and produce a shared object or library with only certain template instantiations (common sets of T/IdxT).
+
+
 Memory management: 
 - cuVS uses the [RMM]([rapidsai/rmm](https://github.com/rapidsai/rmm)) library. 
 Here’s an example of configuring RMM to use a pool allocator in C++ (derived from the RMM example [here](https://github.com/rapidsai/rmm?tab=readme-ov-file#example)):
@@ -41,6 +61,56 @@ All resources which are specific to a computing environment like host or device 
 https://docs.rapids.ai/api/raft/nightly/cpp_api/core_resources/
 ### Device Resources
 `raft::device_resources` is a **convenience over** using `raft::resources` directly. It provides accessor methods to retrieve resources such as the CUDA stream, stream pool, and handles to the various CUDA math libraries like cuBLAS and cuSOLVER.
+### How to use stream
+https://docs.rapids.ai/api/raft/stable/cpp_api/core_resources/#device-resources
+
+https://docs.rapids.ai/api/raft/stable/developer_guide
+headers to be included:
+```cpp
+#include <raft/core/resources.hpp>
+
+#include <raft/core/resource/cuda_stream.hpp>
+
+#include <raft/core/resource/cuda_stream_pool.hpp>
+```
+useful APIs:
+- `auto stream  = raft::resource::get_cuda_stream(handle);`
+- 设置 stream_pool 大小: `raft::resource::set_cuda_stream_pool(dev_resources, std::make_shared<rmm::cuda_stream_pool>(1));`
+- `copy_stream     = raft::resource::get_stream_from_stream_pool(handle);`
+- 查看 stream_pool 大小: `raft::resource::get_stream_pool_size(dev_resources);`
+- 
+
+
+如果不 set_cuda_stream_pool, 只是用那个 default stream (i.e., `raft::resource::get_cuda_stream(dev_resources);`) 好像 stream pool size 就是 = 0. main stream 就是 default stream, stream pool 里面的就是 non-default stream.
+
+![[Pasted image 20250403163724.png]]
+![[Pasted image 20250403163515.png]]
+![[Pasted image 20250403170319.png]]
+![[Pasted image 20250403170704.png]]
+![[Pasted image 20250403170944.png]]
+
+![[Pasted image 20250402211750.png]]
+
+![[Pasted image 20250402211025.png]]
+![[Pasted image 20250402210516.png]]
+貌似和 RMM 有关的接口都是可以带一个 stream 进去? 
+![[Pasted image 20250402210724.png]]
+![[Pasted image 20250402210940.png]]
+
+
+
+```cpp
+// const raft::resources& h
+const int num_streams       = get_stream_pool_size(h);
+
+```
+![[Pasted image 20250402200655.png]]
+
+![[Pasted image 20250402210311.png]]
+
+If an algo requires you to launch GPU work in multiple cuda streams, do not create multiple `raft::resources` objects, one for each such work stream. Instead, use the stream pool configured on the given `raft::resources` instance’s `raft::resources::get_stream_from_stream_pool()` to pick up the right cuda stream. Refer to the section on [CUDA Resources](https://docs.rapids.ai/api/raft/stable/developer_guide/#resource-management) and the section on [Threading](https://docs.rapids.ai/api/raft/stable/developer_guide/#threading-model) for more details. TIP: use `raft::resources::get_stream_pool_size()` to know how many such streams are available at your disposal.
+
+
 ## Multi-dimensional span (C++)
 
 https://docs.rapids.ai/api/cuvs/nightly/api_interoperability/#multi-dimensional-span-c
